@@ -91,3 +91,266 @@ Veja o diagrama abaixo que representa um cenário em que a indisponibilidade do 
 
 Nossa aplicação:
 
+# 🚀 TaskFlow — Microsserviços com Padrão BFF
+
+Sistema completo de gerenciamento de tarefas com arquitetura de microsserviços e padrão **Backend For Frontend (BFF)**, construído com TypeScript/Node.js, Prisma, React.js e React Native.
+
+---
+
+📐 Arquitetura
+
+```
+┌──────────────┐      ┌──────────────┐
+│   Web App    │      │  Mobile App  │
+│  React.js    │      │ React Native │
+│  + Redux     │      │  + Redux     │
+└──────┬───────┘      └──────┬───────┘
+       │                     │
+       ▼                     ▼
+┌──────────────┐      ┌──────────────┐
+│   BFF Web    │      │  BFF Mobile  │
+│  Node :3001  │      │  Node :3002  │
+└──────┬───────┘      └──────┬───────┘
+       │                     │
+       └──────────┬──────────┘
+                  │ (fan-out paralelo)
+    ┌─────────────┼─────────────────┐
+    ▼             ▼                 ▼             ▼
+┌────────┐  ┌──────────┐  ┌──────────────┐  ┌──────────────┐
+│  Auth  │  │  User    │  │    Task      │  │ Notification │
+│ :4001  │  │ :4002    │  │   :4003      │  │   :4004      │
+└───┬────┘  └────┬─────┘  └──────┬───────┘  └──────┬───────┘
+    │             │               │                  │
+    ▼             ▼               ▼                  ▼
+ auth_db       user_db         task_db          notif_db
+(PostgreSQL) (PostgreSQL)   (PostgreSQL)      (PostgreSQL)
+```
+
+Por que BFF?
+
+O padrão BFF cria um backend dedicado para cada tipo de cliente:
+- **BFF Web** — agrega dados de múltiplos serviços em uma única chamada (ex: `/dashboard` retorna usuário + stats + tarefas + notificações em paralelo)
+- **BFF Mobile** — retorna payloads menores otimizados para bandwidth limitado (sem campos desnecessários)
+
+---
+
+🗂️ Estrutura do Projeto
+
+```
+bff-app/
+├── docker-compose.yml
+├── package.json                    # Workspace raiz (npm workspaces)
+├── shared/
+│   └── types.ts                    # Tipos TypeScript compartilhados
+│
+├── services/
+│   ├── auth-service/               # JWT + refresh token rotativo
+│   ├── user-service/               # Perfil de usuário
+│   ├── task-service/               # CRUD tarefas + comentários
+│   ├── notification-service/       # Notificações push
+│   ├── bff-web/                    # BFF para React.js
+│   └── bff-mobile/                 # BFF para React Native
+│
+├── web/                            # React.js + Redux + Tailwind
+└── mobile/                         # React Native (Expo) + Redux
+```
+
+---
+
+🛠️ Stack Tecnológica
+
+| Camada           | Tecnologia                                     |
+|------------------|------------------------------------------------|
+| Microsserviços   | Node.js + Express + TypeScript                 |
+| ORM              | Prisma 5 + PostgreSQL                          |
+| Autenticação     | JWT (access 15min) + Refresh Token rotativo    |
+| Cache/Session    | Redis                                          |
+| Web App          | React 18 + Redux Toolkit + React Query + Vite  |
+| Estilização Web  | Tailwind CSS + React Hook Form + Zod           |
+| Mobile App       | React Native (Expo) + Redux Toolkit            |
+| Containerização  | Docker + Docker Compose                        |
+
+---
+
+⚡ Início Rápido
+
+Pré-requisitos
+- Docker & Docker Compose
+- Node.js 20+
+
+1. Subir com Docker (recomendado)
+
+```bash
+git clone <repo>
+cd bff-app
+
+# Subir todos os serviços (BD, Redis, microsserviços)
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f bff-web bff-mobile
+```
+
+2. Desenvolvimento Local
+
+```bash
+# Instalar dependências de todos os workspaces
+npm install
+
+# Subir apenas os bancos de dados e Redis
+docker-compose up -d postgres-auth postgres-user postgres-task postgres-notification redis
+
+# Rodar migrações em todos os serviços
+npm run db:migrate
+
+# Subir todos os serviços em modo dev
+npm run dev
+```
+
+3. App Web
+
+```bash
+cd web
+npm run dev
+# Acesse: http://localhost:3000
+```
+
+4. App Mobile
+
+```bash
+cd mobile
+npx expo start
+# Escaneie o QR code com o app Expo Go
+```
+
+---
+
+🌐 Portas dos Serviços
+
+| Serviço              | Porta |
+|----------------------|-------|
+| BFF Web              | 3001  |
+| BFF Mobile           | 3002  |
+| Auth Service         | 4001  |
+| User Service         | 4002  |
+| Task Service         | 4003  |
+| Notification Service | 4004  |
+| Web App (Vite)       | 3000  |
+| PostgreSQL Auth      | 5432  |
+| PostgreSQL User      | 5433  |
+| PostgreSQL Task      | 5434  |
+| PostgreSQL Notif.    | 5435  |
+| Redis                | 6379  |
+
+---
+
+📡 Endpoints BFF Web
+
+Autenticação (público)
+| Método | Rota                  | Descrição              |
+|--------|-----------------------|------------------------|
+| POST   | `/api/auth/register`  | Criar conta            |
+| POST   | `/api/auth/login`     | Login                  |
+| POST   | `/api/auth/refresh`   | Renovar access token   |
+| POST   | `/api/auth/logout`    | Logout                 |
+
+Autenticado (Bearer token)
+| Método | Rota                         | Descrição                                  |
+|--------|------------------------------|--------------------------------------------|
+| GET    | `/api/dashboard`             | 🔥 Agregado: user + stats + tarefas + notif |
+| GET    | `/api/tasks`                 | Listar tarefas (filtros + paginação)       |
+| POST   | `/api/tasks`                 | Criar tarefa                               |
+| PATCH  | `/api/tasks/:id`             | Atualizar tarefa                           |
+| DELETE | `/api/tasks/:id`             | Excluir tarefa                             |
+| GET    | `/api/tasks/:id/detail`      | Tarefa + perfil do assignee               |
+| GET    | `/api/notifications`         | Listar notificações                        |
+| PATCH  | `/api/notifications/:id/read`| Marcar como lida                           |
+| PATCH  | `/api/notifications/read-all`| Marcar todas como lidas                    |
+| GET    | `/api/profile`               | Ver perfil                                 |
+| PATCH  | `/api/profile`               | Atualizar perfil                           |
+
+---
+
+🔑 Variáveis de Ambiente
+
+Crie um arquivo `.env` em cada serviço (já configurado no docker-compose):
+
+```env
+# auth-service
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/auth_db
+JWT_SECRET=mude-em-producao
+JWT_REFRESH_SECRET=mude-em-producao
+PORT=4001
+
+# bff-web
+AUTH_SERVICE_URL=http://localhost:4001
+USER_SERVICE_URL=http://localhost:4002
+TASK_SERVICE_URL=http://localhost:4003
+NOTIFICATION_SERVICE_URL=http://localhost:4004
+ALLOWED_ORIGINS=http://localhost:3000
+PORT=3001
+
+# mobile (Expo)
+EXPO_PUBLIC_API_URL=http://localhost:3002/api
+```
+
+---
+
+🗄️ Modelos de Dados
+
+Auth Service
+- `User` — credenciais (email + hash da senha)
+- `RefreshToken` — tokens rotativos com expiração
+
+User Service
+- `User` — perfil (nome, avatar, bio)
+
+Task Service
+- `Task` — título, descrição, status, prioridade, assignee, tags, prazo
+- `Comment` — comentários por tarefa
+
+Notification Service
+- `Notification` — tipo, título, mensagem, lida/não-lida, metadata
+
+---
+
+🧪 Testando a API
+
+```bash
+# Registrar
+curl -X POST http://localhost:3001/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"João","email":"joao@email.com","password":"senha123"}'
+
+# Login
+curl -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"joao@email.com","password":"senha123"}'
+
+# Dashboard (substitua TOKEN)
+curl http://localhost:3001/api/dashboard \
+  -H "Authorization: Bearer TOKEN"
+
+# Criar tarefa
+curl -X POST http://localhost:3001/api/tasks \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Implementar feature X","priority":"HIGH","status":"TODO"}'
+```
+
+---
+
+📱 Features da Aplicação
+
+- ✅ Autenticação completa (registro, login, logout, refresh token automático)
+- ✅ Dashboard agregado com stats em tempo real
+- ✅ CRUD completo de tarefas com filtros e paginação
+- ✅ Sistema de notificações em tempo real
+- ✅ Perfil do usuário editável
+- ✅ BFF Web otimizado para React.js
+- ✅ BFF Mobile com payloads enxutos para React Native
+- ✅ Redux Toolkit com thunks para gerenciamento de estado
+- ✅ Interceptor de token refresh automático (sem logout ao expirar)
+- ✅ Rate limiting por IP
+- ✅ Validação de dados com Zod em todos os serviços
+- ✅ Health checks em todos os serviços

@@ -1,0 +1,206 @@
+version: '3.9'
+
+services:
+  # ─── Databases ────────────────────────────────────────────────────────────
+  postgres-auth:
+    image: postgres:15-alpine
+    container_name: postgres-auth
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata-auth:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-user:
+    image: postgres:15-alpine
+    container_name: postgres-user
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata-user:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-task:
+    image: postgres:15-alpine
+    container_name: postgres-task
+    environment:
+      POSTGRES_DB: task_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata-task:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-notification:
+    image: postgres:15-alpine
+    container_name: postgres-notification
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - pgdata-notification:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis (cache & session) ───────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  # ─── Microservices ─────────────────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "4001:4001"
+    environment:
+      PORT: 4001
+      DATABASE_URL: "postgresql://postgres:postgres@postgres-auth:5432/auth_db"
+      JWT_SECRET: "super-secret-jwt-key-change-in-production"
+      JWT_REFRESH_SECRET: "super-secret-refresh-key-change-in-production"
+      REDIS_URL: "redis://redis:6379"
+      NODE_ENV: development
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "4002:4002"
+    environment:
+      PORT: 4002
+      DATABASE_URL: "postgresql://postgres:postgres@postgres-user:5432/user_db"
+      AUTH_SERVICE_URL: "http://auth-service:4001"
+      REDIS_URL: "redis://redis:6379"
+      NODE_ENV: development
+    depends_on:
+      postgres-user:
+        condition: service_healthy
+
+  task-service:
+    build:
+      context: ./services/task-service
+      dockerfile: Dockerfile
+    container_name: task-service
+    ports:
+      - "4003:4003"
+    environment:
+      PORT: 4003
+      DATABASE_URL: "postgresql://postgres:postgres@postgres-task:5432/task_db"
+      AUTH_SERVICE_URL: "http://auth-service:4001"
+      NOTIFICATION_SERVICE_URL: "http://notification-service:4004"
+      REDIS_URL: "redis://redis:6379"
+      NODE_ENV: development
+    depends_on:
+      postgres-task:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "4004:4004"
+    environment:
+      PORT: 4004
+      DATABASE_URL: "postgresql://postgres:postgres@postgres-notification:5432/notification_db"
+      AUTH_SERVICE_URL: "http://auth-service:4001"
+      REDIS_URL: "redis://redis:6379"
+      NODE_ENV: development
+    depends_on:
+      postgres-notification:
+        condition: service_healthy
+
+  # ─── BFFs ─────────────────────────────────────────────────────────────────
+  bff-web:
+    build:
+      context: ./services/bff-web
+      dockerfile: Dockerfile
+    container_name: bff-web
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      AUTH_SERVICE_URL: "http://auth-service:4001"
+      USER_SERVICE_URL: "http://user-service:4002"
+      TASK_SERVICE_URL: "http://task-service:4003"
+      NOTIFICATION_SERVICE_URL: "http://notification-service:4004"
+      REDIS_URL: "redis://redis:6379"
+      JWT_SECRET: "super-secret-jwt-key-change-in-production"
+      ALLOWED_ORIGINS: "http://localhost:3000"
+      NODE_ENV: development
+    depends_on:
+      - auth-service
+      - user-service
+      - task-service
+      - notification-service
+
+  bff-mobile:
+    build:
+      context: ./services/bff-mobile
+      dockerfile: Dockerfile
+    container_name: bff-mobile
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      AUTH_SERVICE_URL: "http://auth-service:4001"
+      USER_SERVICE_URL: "http://user-service:4002"
+      TASK_SERVICE_URL: "http://task-service:4003"
+      NOTIFICATION_SERVICE_URL: "http://notification-service:4004"
+      REDIS_URL: "redis://redis:6379"
+      JWT_SECRET: "super-secret-jwt-key-change-in-production"
+      NODE_ENV: development
+    depends_on:
+      - auth-service
+      - user-service
+      - task-service
+      - notification-service
+
+volumes:
+  pgdata-auth:
+  pgdata-user:
+  pgdata-task:
+  pgdata-notification:
+  redisdata:
