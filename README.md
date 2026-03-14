@@ -93,8 +93,6 @@ Veja o diagrama abaixo que representa um cenário em que a indisponibilidade do 
 
 Sistema completo de gerenciamento de tarefas com arquitetura de microsserviços e padrão **Backend For Frontend (BFF)**, construído com TypeScript/Node.js, Prisma, React.js e React Native.
 
----
-
 📐 Arquitetura
 
 ```
@@ -127,10 +125,9 @@ Sistema completo de gerenciamento de tarefas com arquitetura de microsserviços 
 Por que BFF?
 
 O padrão BFF cria um backend dedicado para cada tipo de cliente:
+
 - **BFF Web** — agrega dados de múltiplos serviços em uma única chamada (ex: `/dashboard` retorna usuário + stats + tarefas + notificações em paralelo)
 - **BFF Mobile** — retorna payloads menores otimizados para bandwidth limitado (sem campos desnecessários)
-
----
 
 🗂️ Estrutura do Projeto
 
@@ -167,8 +164,6 @@ bff-app/
 | Estilização Web  | Tailwind CSS + React Hook Form + Zod           |
 | Mobile App       | React Native (Expo) + Redux Toolkit            |
 | Containerização  | Docker + Docker Compose                        |
-
----
 
 ⚡ Início Rápido
 
@@ -221,8 +216,6 @@ npx expo start
 # Escaneie o QR code com o app Expo Go
 ```
 
----
-
 🌐 Portas dos Serviços
 
 | Serviço              | Porta |
@@ -239,8 +232,6 @@ npx expo start
 | PostgreSQL Task      | 5434  |
 | PostgreSQL Notif.    | 5435  |
 | Redis                | 6379  |
-
----
 
 📡 Endpoints BFF Web
 
@@ -267,7 +258,6 @@ Autenticado (Bearer token)
 | GET    | `/api/profile`               | Ver perfil                                 |
 | PATCH  | `/api/profile`               | Atualizar perfil                           |
 
----
 
 🔑 Variáveis de Ambiente
 
@@ -292,8 +282,6 @@ PORT=3001
 EXPO_PUBLIC_API_URL=http://localhost:3002/api
 ```
 
----
-
 🗄️ Modelos de Dados
 
 Auth Service
@@ -310,7 +298,6 @@ Task Service
 Notification Service
 - `Notification` — tipo, título, mensagem, lida/não-lida, metadata
 
----
 
 🧪 Testando a API
 
@@ -335,8 +322,6 @@ curl -X POST http://localhost:3001/api/tasks \
   -H "Content-Type: application/json" \
   -d '{"title":"Implementar feature X","priority":"HIGH","status":"TODO"}'
 ```
-
----
 
 📱 Features da Aplicação
 
