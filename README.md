@@ -48,7 +48,13 @@ Ele agrega, adapta e transforma os dados de vários serviços para entregar ao f
 
 Discutimos o API Gateway. Essa abordagem é boa se tivermos um único cliente na web ou no celular. Se nosso aplicativo for usado por vários clientes, como web, dispositivos móveis, IoT, etc., não é uma boa ideia usar um único API Gateway para todos os tipos de clientes. O processo ficará complicado rapidamente e poderá inchar o serviço API Gateway, tornando-o um único serviço Monolith.
 
-<img src="https://github.com/user-attachments/assets/dea5743c-855c-43e0-9fb9-210fa03addd1" align="right" height="377">
+<img src="https://github.com/user-attachments/assets/dea5743c-855c-43e0-9fb9-210fa03addd1" height="377">
+
+<img width="794" height="629" alt="1_6a-UA3VgHJ1IO8aiuu2SLw" src="https://github.com/user-attachments/assets/df9b8c41-9616-475f-a03f-0623ff781b51" />
+
+<img width="1200" height="674" alt="1_O7orUX6FefecZSG0c8pmeA" src="https://github.com/user-attachments/assets/6b81511d-a1aa-4e3d-82de-7fb9c6c49ed6" />
+
+<img width="709" height="439" alt="26a5b9c9-e1e1-4dfb-b60b-9f7e66372386_709x439" src="https://github.com/user-attachments/assets/d263dc43-b06d-428a-9a2f-bc50bc989676" />
 
 A melhor abordagem para esse tipo de cenário é usar um API Gateway separado para cada tipo de cliente, esse padrão de arquitetura é chamado de padrão Backend for FrontEnd (BFF) e se tornou uma palavra da moda.
 
