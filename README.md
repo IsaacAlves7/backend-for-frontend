@@ -95,8 +95,7 @@ Veja o diagrama abaixo que representa um cenário em que a indisponibilidade do 
 
 <img width="1600" height="971" alt="image" src="https://github.com/user-attachments/assets/3c221b20-bb25-432f-a908-4282744dfa00" />
 
-# Aplicação — Microsserviços com Padrão BFF
-
+## [BFF] Microservices
 Sistema completo de gerenciamento de tarefas com arquitetura de microsserviços e padrão **Backend For Frontend (BFF)**, construído com TypeScript/Node.js, Prisma, React.js e React Native.
 
 📐 Arquitetura
@@ -345,3 +344,5 @@ curl -X POST http://localhost:3001/api/tasks \
 - ✅ Rate limiting por IP
 - ✅ Validação de dados com Zod em todos os serviços
 - ✅ Health checks em todos os serviços
+
+## [BFF] Conectando com Microfrontends
