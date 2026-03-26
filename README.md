@@ -345,4 +345,4 @@ curl -X POST http://localhost:3001/api/tasks \
 - ✅ Validação de dados com Zod em todos os serviços
 - ✅ Health checks em todos os serviços
 
-## [BFF] Conectando com Microfrontends
+## [BFF] Microfrontends
