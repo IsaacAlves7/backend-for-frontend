@@ -54,6 +54,8 @@ Discutimos o API Gateway. Essa abordagem é boa se tivermos um único cliente na
 
 <img width="1200" height="674" alt="1_O7orUX6FefecZSG0c8pmeA" src="https://github.com/user-attachments/assets/6b81511d-a1aa-4e3d-82de-7fb9c6c49ed6" />
 
+<img width="1369" height="626" alt="1_JCqUL2QL1DQYTOW2BzbUFQ" src="https://github.com/user-attachments/assets/61e7a802-81b1-4852-aa75-adb174c699d0" />
+
 <img width="709" height="439" alt="26a5b9c9-e1e1-4dfb-b60b-9f7e66372386_709x439" src="https://github.com/user-attachments/assets/d263dc43-b06d-428a-9a2f-bc50bc989676" />
 
 A melhor abordagem para esse tipo de cenário é usar um API Gateway separado para cada tipo de cliente, esse padrão de arquitetura é chamado de padrão Backend for FrontEnd (BFF) e se tornou uma palavra da moda.
