@@ -339,7 +339,7 @@ curl -X POST http://localhost:3001/api/tasks \
 
 📱 Features da Aplicação
 
-<img width="2400" height="952" alt="3-bff" src="https://github.com/user-attachments/assets/1e1c4c76-daf2-4da9-8935-68c107b6e1d1" />
+<a href="https://fusionauth.io/blog/backend-for-frontend"><img width="2400" height="952" alt="3-bff" src="https://github.com/user-attachments/assets/1e1c4c76-daf2-4da9-8935-68c107b6e1d1" /></a>
 
 - ✅ Autenticação completa (registro, login, logout, refresh token automático)
 - ✅ Dashboard agregado com stats em tempo real
